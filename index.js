@@ -8,7 +8,7 @@ app.use(cors())
 app.use(express.json())
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.UsersName}:${process.env.PassWord}@cluster0.c60ctk1.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -31,6 +31,12 @@ async function run() {
         const result = await myRoomCollection.find().toArray();
         res.send(result)
     })
+
+    app.get('/rooms/:id', async (req,res) => {
+        const id = req.params.id;
+        const result = await myRoomCollection.findOne({_id: new ObjectId(id)});
+        res.send(result);
+      })
     
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
