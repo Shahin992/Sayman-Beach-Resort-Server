@@ -21,6 +21,7 @@ const client = new MongoClient(uri, {
 });
 
 const myRoomCollection = client.db('RoomCollectiondb').collection('rooms')
+const bookingCollection = client.db('RoomCollectiondb').collection('bookings');
 
 async function run() {
   try {
@@ -37,6 +38,15 @@ async function run() {
         const result = await myRoomCollection.findOne({_id: new ObjectId(id)});
         res.send(result);
       })
+
+     
+
+      app.post('/bookings', async (req, res) => {
+        const newbooking = req.body;
+        const result = await bookingCollection.insertOne(newbooking);
+        res.send(result)
+        console.log(result);
+    })
     
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -51,8 +61,6 @@ run().catch(console.dir);
 app.get('/', (req, res) => {
   res.send('Sayeman Beach Resort Server')
 })
-
-
 
 
 
