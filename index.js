@@ -20,12 +20,18 @@ const client = new MongoClient(uri, {
   }
 });
 
+const myRoomCollection = client.db('RoomCollectiondb').collection('rooms')
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
+
+    app.get('/rooms',async (req, res) => {
+        const result = await myRoomCollection.find().toArray();
+        res.send(result)
+    })
+    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
@@ -39,6 +45,8 @@ run().catch(console.dir);
 app.get('/', (req, res) => {
   res.send('Sayeman Beach Resort Server')
 })
+
+
 
 
 
