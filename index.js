@@ -39,14 +39,45 @@ async function run() {
         res.send(result);
       })
 
-     
+      await bookingCollection.createIndex({ date: 1, title: 1 }, { unique: true });
+
+      app.get('/bookings',async (req, res) => {
+        const result = await bookingCollection.find().toArray();
+        res.send(result)
+    })
+
+
+    app.get('/bookings/:email',async (req, res) => {
+        const email = req.params.email;
+        console.log(email);
+        const result = await bookingCollection.find({userEmail: email}).toArray();
+        res.send(result);
+    })
+
 
       app.post('/bookings', async (req, res) => {
         const newbooking = req.body;
-        const result = await bookingCollection.insertOne(newbooking);
-        res.send(result)
-        console.log(result);
-    })
+        try {
+            const result = await bookingCollection.insertOne(newbooking);
+            res.send(result);
+            console.log(result);
+          }
+    catch (error) {
+        if (error.code === 11000) {
+          res.status(400).send('Duplicate booking. A booking with the same date and title already exists.');
+        } else {
+          res.status(500).send('Internal Server Error');
+        }
+      }})
+
+      app.delete('/bookings/:id', async (req,res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) }
+        const result = await bookingCollection.deleteOne(query);
+        res.send(result);
+      })
+
+
     
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
