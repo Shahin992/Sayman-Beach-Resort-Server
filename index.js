@@ -14,6 +14,24 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+const logger = (req, res, next) =>{
+  console.log('log: info', req.method, req.url);
+  next();
+}
+
+const verifyToken = (req, res, next) =>{
+  const token = req?.cookies?.token;
+ 
+  if(!token){
+      return res.status(401).send({message: 'unauthorized access'})
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) =>{
+      if(err){
+          return res.status(401).send({message: 'unauthorized access'})
+      }
+      req.user = decoded;
+      next();
+  })}
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.UsersName}:${process.env.PassWord}@cluster0.c60ctk1.mongodb.net/?retryWrites=true&w=majority`;
@@ -51,7 +69,8 @@ async function run() {
       { unique: true }
     );
 
-    app.get("/bookings", async (req, res) => {
+    app.get("/bookings",verifyToken,logger, async (req, res) => {
+
       const result = await bookingCollection.find().toArray();
       res.send(result);
     });
@@ -123,6 +142,10 @@ async function run() {
       
     });
 
+    app.post('/logout', async (req, res) => {
+      const user = req.body;
+      res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+  })
 
     
 
