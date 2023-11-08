@@ -47,16 +47,53 @@ const client = new MongoClient(uri, {
 
 const myRoomCollection = client.db("RoomCollectiondb").collection("rooms");
 const bookingCollection = client.db("RoomCollectiondb").collection("bookings");
+const offerCollection = client.db("RoomCollectiondb").collection("specialOffers");
+const thingCollection = client.db("RoomCollectiondb").collection("Things");
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    // app.get("/rooms", async (req, res) => {
+
+    //   const result = await myRoomCollection.find().toArray();
+    //   res.send(result);
+    // });
+
     app.get("/rooms", async (req, res) => {
-      const result = await myRoomCollection.find().toArray();
+      const sortfield = req.query.sortfield;
+      const sortorder = req.query.sortorder;
+    
+      const sortObj = {};
+      if (sortfield && (sortorder === "asc" || sortorder === "desc")) {
+        sortObj[sortfield] = sortorder === "asc" ? 1 : -1;
+      } else {
+        
+        
+        sortObj["price"] = 1;
+      }
+    
+      try {
+        const result = await myRoomCollection.find().sort(sortObj).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+      }
+    });
+    
+
+
+    app.get("/offers", async (req, res) => {
+      const result = await offerCollection.find().toArray();
       res.send(result);
     });
+    app.get("/things", async (req, res) => {
+      const result = await thingCollection.find().toArray();
+      res.send(result);
+    });
+
 
     app.get("/rooms/:id", async (req, res) => {
       const id = req.params.id;
@@ -68,6 +105,8 @@ async function run() {
       { date: 1, title: 1 },
       { unique: true }
     );
+
+
 
     app.get("/bookings",verifyToken,logger, async (req, res) => {
 
