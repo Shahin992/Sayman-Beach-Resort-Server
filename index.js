@@ -49,10 +49,16 @@ async function run() {
 
     app.get('/bookings/:email',async (req, res) => {
         const email = req.params.email;
-        console.log(email);
+       
         const result = await bookingCollection.find({userEmail: email}).toArray();
         res.send(result);
     })
+
+    app.get('/bookings/:title',async (req, res) => {
+      const title = req.params.title;
+        const result = await bookingCollection.findOne({title: title});
+        res.send(result);
+  })
 
 
       app.post('/bookings', async (req, res) => {
@@ -69,6 +75,24 @@ async function run() {
           res.status(500).send('Internal Server Error');
         }
       }})
+
+      app.put('/bookings/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = {_id : new ObjectId(id)}
+        const option = {upsert : true}
+        const updatedbooking = req.body
+        const Product = {
+          $set: {
+            date : updatedbooking.date,
+           
+          }
+  
+        }
+        const result = await bookingCollection.updateOne(filter, Product, option);
+        res.send(result);
+      })
+
+
 
       app.delete('/bookings/:id', async (req,res) => {
         const id = req.params.id;
