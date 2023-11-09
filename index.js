@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173","https://sayeman-beach-resort-shahin.web.app","https://sayeman-hotel-server.vercel.app"],
     credentials: true,
   })
 );
@@ -49,17 +49,14 @@ const myRoomCollection = client.db("RoomCollectiondb").collection("rooms");
 const bookingCollection = client.db("RoomCollectiondb").collection("bookings");
 const offerCollection = client.db("RoomCollectiondb").collection("specialOffers");
 const thingCollection = client.db("RoomCollectiondb").collection("Things");
+const reviewCollection = client.db("RoomCollectiondb").collection("reviews");
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    // app.get("/rooms", async (req, res) => {
-
-    //   const result = await myRoomCollection.find().toArray();
-    //   res.send(result);
-    // });
+    
 
     app.get("/rooms", async (req, res) => {
       const sortfield = req.query.sortfield;
@@ -70,7 +67,7 @@ async function run() {
         sortObj[sortfield] = sortorder === "asc" ? 1 : -1;
       } else {
         
-        
+
         sortObj["price"] = 1;
       }
     
@@ -93,7 +90,16 @@ async function run() {
       const result = await thingCollection.find().toArray();
       res.send(result);
     });
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
 
+    app.get("/reviews/:title", async (req, res) => {
+      const title = req.params.title;
+      const result = await reviewCollection.find({title:title}).toArray()
+      res.send(result);
+    });
 
     app.get("/rooms/:id", async (req, res) => {
       const id = req.params.id;
@@ -114,7 +120,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/bookings/:email", async (req, res) => {
+    app.get("/bookings/:email",verifyToken,logger, async (req, res) => {
       const email = req.params.email;
 
       const result = await bookingCollection
@@ -134,7 +140,7 @@ async function run() {
       try {
         const result = await bookingCollection.insertOne(newbooking);
         res.send(result);
-        console.log(result);
+       
       } catch (error) {
         if (error.code === 11000) {
           res
@@ -148,7 +154,15 @@ async function run() {
       }
     });
 
-    app.put("/bookings/:id", async (req, res) => {
+    app.post('/reviews', async(req,res) => {
+      const newReview = req.body;
+      const result = await reviewCollection.insertOne(newReview);
+        res.send(result);
+
+
+    })
+
+    app.put("/bookings/:id",verifyToken,logger, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const option = { upsert: true };
@@ -185,6 +199,8 @@ async function run() {
       const user = req.body;
       res.clearCookie('token', { maxAge: 0 }).send({ success: true })
   })
+
+ 
 
     
 
